@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import RoomSelect from './components/RoomSelect';
 import Room from './components/Room';
 import socket from './socket';
@@ -41,6 +41,7 @@ function App() {
         <Route path={'/'} element={<Home />} />
         <Route path={'/join'} element={<RoomSelect />} />
         <Route path={'/room/:roomId'} element={<Room />} />
+        <Route path='*' index element={<Navigate to='/' replace />} />
       </Routes>
       <footer className={styles.footer}>
         Made for fun with <a href='https://react.dev'>React</a>, <a href='https://expressjs.com'>ExpressJS</a> & <a href='https://socket.io'>Socket.io</a> by <a href='https://arthurlemaire.fr'>Arthur LEMAIRE</a>
