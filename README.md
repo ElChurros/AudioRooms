@@ -17,7 +17,7 @@ npm start
 
 Once the server has started, visit [localhost:8000](http://localhost:8000)
 
-## Running the frontend with hot-reload
+## Running the app with hot-reload
 If you wish to modify the frontend React with hot-reload enabled, run the React development server from the `client` directory:
 ```bash
 cd client
@@ -25,3 +25,8 @@ npm start
 ```
 
 Once the React development server has started, visit [localhost:3000](http://localhost:3000) instead
+
+If you wish to modify the backend code with hot-reload enabled, start the server with the following command instead:
+```bash
+npm run dev
+```
