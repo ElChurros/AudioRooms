@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { clamp } from '../../../utils/maths'
 import socket from '../../../socket'
-import styles from './AddSource.module.css'
+import styles from './RoomManager.module.css'
 
-const AddSource = ({ setPos, setAddingSource, mapRef }) => {
+const RoomManager = ({ setPos, setAddingSource, mapRef }) => {
     const [availableFiles, setAvailableFiles] = useState([])
     const [selectedFile, setSelectedFile] = useState('')
     const [placingSource, setPlacingSource] = useState(false)
@@ -137,4 +137,4 @@ const AddSource = ({ setPos, setAddingSource, mapRef }) => {
     </div>
 }
 
-export default AddSource
+export default RoomManager

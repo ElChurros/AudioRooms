@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import socket from '../../socket'
 import audioContext from '../../audio-context'
-import AddSource from './AddSource'
+import RoomManager from './RoomManager'
 import Player from './Player'
 import PeerConnection from './PeerConnection'
 import AudioSource from './AudioSource'
@@ -170,7 +170,7 @@ const Room = () => {
                 {me ? <Player pos={me.pos} isSelf /> : ''}
             </div>
         </div>
-        <AddSource setPos={setPreviewPos} addingSource={addingSource} setAddingSource={setAddingSource} mapRef={mapRef} />
+        <RoomManager setPos={setPreviewPos} addingSource={addingSource} setAddingSource={setAddingSource} mapRef={mapRef} />
     </div>
 }
 
