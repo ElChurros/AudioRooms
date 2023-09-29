@@ -1,0 +1,8 @@
+{
+    "maxUsers": 5,
+    "dimensions": {
+        "width": 100,
+        "height": 100
+    },
+    "sources": []
+}

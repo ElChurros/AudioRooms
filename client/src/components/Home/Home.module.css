@@ -1,0 +1,31 @@
+.main {
+    box-sizing: border-box;
+    width: 100vw;
+    height: 100vh;
+    text-align: center;
+    padding-top: 5rem;
+}
+
+.main p {
+    margin-top: 2rem;
+    font-size: .75rem;
+    margin-bottom: 2rem;
+}
+
+.main button {
+    font-size: 1.5rem;
+    padding: .25rem;
+    border-radius: .5rem;
+    background-color: lightgray;
+    border-color: black;
+    box-shadow: none;
+}
+
+.main button a {
+    text-decoration: none;
+    color: black;
+}
+
+.main button:hover a {
+    text-decoration: underline;
+}

@@ -1,0 +1,103 @@
+import { useEffect, useRef } from "react"
+import audioContext from "../../../audio-context"
+import PulsatingSource from "../../PulsatingSource"
+
+const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destinationRef, maxHearingDistance = 20, gain = 0.05, listenerPos, ...props}) => {
+    const { x = 0, y = 0, z = 0, direction = 0} = pos
+    const {
+        coneInnerAngle = 360,
+        coneOuterAngle = 0,
+        coneOuterGain = 0,
+        distanceModel = 'exponential',
+        maxDistance = 10000,
+        orientationX = Math.cos(((direction + 180) % 360) * Math.PI/180),
+        orientationY = Math.sin(((direction + 180) % 360) * Math.PI/180),
+        orientationZ = 0,
+        panningModel = 'HRTF',
+        refDistance = 5,
+        rolloffFactor = 2,
+    } = pannerProps
+    const {
+        detune = 0,
+        loop = true,
+        loopStart = 0,
+        loopEnd = 0,
+        playbackRate = 1
+    } = sourceProps
+    const sourceRef = useRef()
+    const pannerRef = useRef()
+    const gainRef = useRef()
+
+    useEffect(() => {
+        audioContext.resume()
+        let playbackStarted = false
+        let shouldStartPlayback = true
+        sourceRef.current = audioContext.createBufferSource()
+        fetch(`${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/file/${filename}`).then(res => {
+            return res.arrayBuffer()
+        }).then(arrayBuffer => {
+            return audioContext.decodeAudioData(arrayBuffer)
+        }).then(audioBuffer => {
+            sourceRef.current.detune.setValueAtTime(detune, audioContext.currentTime)
+            sourceRef.current.buffer = audioBuffer
+            sourceRef.current.loop = loop
+            sourceRef.current.loopStart = loopStart
+            sourceRef.current.loopEnd = loopEnd
+            sourceRef.current.playbackRate.setValueAtTime(playbackRate, audioContext.currentTime)
+            pannerRef.current = audioContext.createPanner()
+            pannerRef.current.coneInnerAngle = coneInnerAngle
+            pannerRef.current.coneOuterAngle = coneOuterAngle
+            pannerRef.current.coneOuterGain = coneOuterGain
+            pannerRef.current.distanceModel = distanceModel
+            pannerRef.current.maxDistance = maxDistance
+            pannerRef.current.panningModel = panningModel
+            pannerRef.current.refDistance = refDistance
+            pannerRef.current.rolloffFactor = rolloffFactor
+            pannerRef.current.positionX.setValueAtTime(x, audioContext.currentTime)
+            pannerRef.current.positionY.setValueAtTime(y, audioContext.currentTime)
+            pannerRef.current.positionZ.setValueAtTime(z, audioContext.currentTime)
+            pannerRef.current.orientationX.setValueAtTime(orientationX, audioContext.currentTime)
+            pannerRef.current.orientationY.setValueAtTime(orientationY, audioContext.currentTime)
+            pannerRef.current.orientationZ.setValueAtTime(orientationZ, audioContext.currentTime)
+            gainRef.current = audioContext.createGain()
+            gainRef.current.gain.setValueAtTime(gain, audioContext.currentTime)
+            
+            sourceRef.current.connect(pannerRef.current).connect(gainRef.current).connect(destinationRef.current)
+            if (shouldStartPlayback) {
+                sourceRef.current.start(audioContext.currentTime)
+                playbackStarted = true
+            }
+        }).catch(err => {
+            console.error(err)
+        })
+        
+        return () => {            
+            if (playbackStarted) {
+                sourceRef.current.stop()
+                sourceRef.current.disconnect()
+            } else {
+                shouldStartPlayback = false
+            }
+        }
+    }, [coneInnerAngle, coneOuterAngle, coneOuterGain, destinationRef, detune, distanceModel, filename, gain, loop, loopEnd, loopStart, maxDistance, orientationX, orientationY, orientationZ, panningModel, playbackRate, refDistance, rolloffFactor, x, y, z])
+
+    useEffect(() => {
+        if (!pannerRef.current || !gainRef)
+            return
+        const distance = Math.sqrt(Math.pow(listenerPos.x - x, 2) + Math.pow(listenerPos.y - y, 2))
+        if (distance > maxHearingDistance)
+            gainRef.current.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.3)
+        else
+            gainRef.current.gain.linearRampToValueAtTime(gain, audioContext.currentTime + 0.3)
+        pannerRef.current.positionX.setValueAtTime(x, audioContext.currentTime)
+        pannerRef.current.positionY.setValueAtTime(y, audioContext.currentTime)
+        pannerRef.current.positionZ.setValueAtTime(z, audioContext.currentTime)
+        pannerRef.current.orientationX.setValueAtTime(orientationX, audioContext.currentTime)
+        pannerRef.current.orientationY.setValueAtTime(orientationY, audioContext.currentTime)
+        pannerRef.current.orientationZ.setValueAtTime(orientationZ, audioContext.currentTime)
+    }, [orientationX, orientationY, orientationZ, x, y, z, listenerPos.x, listenerPos.y, gain, maxHearingDistance])
+
+    return <PulsatingSource x={x} y={y} size={2*refDistance/rolloffFactor} />
+}
+
+export default AudioSource

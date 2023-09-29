@@ -1,0 +1,50 @@
+.playerPos {
+    position: absolute;
+    transform-origin: 0% 100%;
+    transition: all 100ms linear, rotate 20ms linear;
+    -moz-transition: all 100ms linear, rotate 20ms linear;
+    -webkit-transition: all 100ms linear, rotate 20ms linear;
+}
+
+.player {
+    position: absolute;
+    width: .5rem;
+    height: .5rem;
+    box-sizing: border-box;
+    transform: translateX(-.25rem) translateY(-.25rem);
+    border-radius: 50%;
+    border: solid 1px black;
+    background-color: darkblue;
+}
+
+.self .player {
+    background-color: red;
+}
+
+.soundSource {
+    background-color: orange;
+}
+
+.around {
+    position: absolute;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle closest-side,orange, #0000);
+}
+
+.cone {
+    width: 6rem;
+    height: 3rem;
+    border-radius: 50%;
+    transform-origin: 0% 0%;
+    transform: rotate(90deg) translateY(calc(-100%));
+    background: radial-gradient(farthest-side at bottom, darkblue, #0000);
+    mask: conic-gradient(from -45deg at bottom,#0000, #000 1deg 90deg, #0000 91deg);
+    -webkit-mask: conic-gradient(from -45deg at bottom,#0000, #000 1deg 90deg, #0000 91deg);
+}
+
+.self .cone {
+    background: radial-gradient(farthest-side at bottom, red, #0000);
+}

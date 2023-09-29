@@ -1,0 +1,157 @@
+.addSource {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 20rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background-color: #5b5c58;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    transition: all .3s ease;
+    color: antiquewhite;
+}
+
+.collapsed {
+    margin-left: -17.5rem;
+}
+
+.btnRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.btnRow button span {
+    color: antiquewhite;
+}
+
+.title {
+    flex-grow: 1;
+    padding: .25rem;
+}
+
+.btnRow button {
+    background-color: transparent;
+    border: none;
+    border-radius: 50%;
+    margin: .25rem;
+    padding: .25rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    transition: all .3s ease;
+    width: 1.5rem;
+    height: 1.5rem;
+    box-sizing: content-box;
+    outline: none;
+}
+
+.addSource button:hover,
+.addSource button:active {
+    background-color: #979994;
+    border: none;
+    box-shadow: none;
+}
+
+.content {
+    padding: .25rem;
+    transition: all .3s ease;
+    overflow-y: auto;
+}
+
+.content > div {
+    margin-bottom: 2rem;
+}
+
+.collapsed .content {
+    color: transparent;
+}
+
+.content select {
+    background-color: #979994;
+    color: antiquewhite;
+    border: none;
+    width: 100%;
+    transition: all .3s ease;
+}
+
+.content select:focus {
+    outline: none;
+}
+
+.collapsed select {
+    background-color: transparent;
+    color: transparent;
+}
+
+.content>span {
+    font-size: .75rem;
+}
+
+.content h5 {
+    margin-top: 1rem;
+}
+
+.copyContainer {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+}
+
+.copyLink {
+    color: antiquewhite;
+    background-color: #5b5c58;
+    outline: none;
+    box-shadow: none;
+    border: none;
+    border-radius: .75rem;
+    font-size: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    height: 3rem;
+    line-height: 3rem;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.copied {
+    background-color: #979994;
+}
+
+.linkIcon {
+    line-height: 3rem;
+    vertical-align: middle;
+    margin-right: .5rem;
+}
+
+::-webkit-scrollbar {
+    width: .5rem;
+    height: .5rem;
+}
+
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: .25rem;
+    transition: all .3s ease;
+    box-shadow: inset 3px 3px 5px rgba(0, 0, 0, .1);
+}
+
+.collapsed ::-webkit-scrollbar-track {
+    box-shadow: none;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    border-radius: .25rem;
+    background: #888;
+    transition: all .3s ease;
+}
+
+.collapsed ::-webkit-scrollbar-thumb {
+    background: transparent;
+}
