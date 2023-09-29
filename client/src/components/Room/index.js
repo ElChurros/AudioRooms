@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import socket from '../../socket'
 import audioContext from '../../audio-context'
@@ -26,8 +26,8 @@ const Room = () => {
     const mapRef = useRef()
     const { roomId } = useParams()
     const navigate = useNavigate()
-    const me = users.find(u => u.id === socket.id)
-    const others = users.filter(u => u.id !== socket.id)
+    const me = useMemo(users.find(u => u.id === socket.id), [users])
+    const others = useMemo(users.filter(u => u.id !== socket.id), [users])
 
     useEffect(() => {
         gainNodeRef.current = audioContext.createGain()
