@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import audioContext from "../../../audio-context"
 import PulsatingSource from "../../PulsatingSource"
 import useEventListener from "../../../hooks/useEventListener"
@@ -31,6 +31,8 @@ const AudioSource = ({filename, id, pos, sourceProps = {}, pannerProps = {}, des
     const sourceRef = useRef()
     const pannerRef = useRef()
     const gainRef = useRef()
+    const sourceElementRef = useRef()
+    const dragOffsetRef = useRef()
 
     useEffect(() => {
         audioContext.resume()
@@ -109,28 +111,34 @@ const AudioSource = ({filename, id, pos, sourceProps = {}, pannerProps = {}, des
         pannerRef.current.orientationZ.setValueAtTime(orientationZ, audioContext.currentTime)
     }, [orientationX, orientationY, orientationZ, x, y, z, listenerPos.x, listenerPos.y, gain, maxHearingDistance])
 
-    const onPointerDown = e => {
-        e.stopPropagation()
-        if (movable)
+    const onPointerDown = (e) => {
+        e.preventDefault()
+        if (movable) {
+            const sourceRect = sourceElementRef.current.getBoundingClientRect()
+            const dragOffset = {x: sourceRect.x + sourceRect.width/2 - e.clientX, y: sourceRect.y + sourceRect.height/2 - e.clientY}
+            dragOffsetRef.current = dragOffset
             setIsDragging(true)
-    }
-
-    const onPointerMove = e => {
-        if (isDragging) {
-            const { x, y, width, height } = mapRef.current.getBoundingClientRect()
-            const newPos = {x: clamp((e.pageX - x - window.scrollX) * 100 / width, 0, 100), y: clamp((y - e.pageY + height + window.scrollY) * 100 / height, 0, 100)}
-            socket.emit('source movement', {id: id, pos: newPos})
         }
     }
 
-    const onPointerUp = e => {
+    const onPointerMove = useCallback(e => {
+        e.preventDefault()
+        if (isDragging) {
+            const { x, y, width, height } = mapRef.current.getBoundingClientRect()
+            const newPos = {x: clamp((e.pageX - x - window.scrollX + dragOffsetRef.current.x) * 100 / width, 0, 100), y: clamp((y - e.pageY + height + window.scrollY - dragOffsetRef.current.y) * 100 / height, 0, 100)}
+            socket.emit('source movement', {id: id, pos: newPos})
+        }
+    }, [id, isDragging, mapRef])
+
+    const onPointerUp = useCallback(e => {
+        e.preventDefault()
         setIsDragging(false)
-    }
+    }, [])
 
     useEventListener('pointerup', onPointerUp)
     useEventListener('pointermove', onPointerMove)
 
-    return <PulsatingSource x={x} y={y} size={2*refDistance/rolloffFactor} color={highlighted ? 'red' : 'orange'} movable={movable} onPointerDown={onPointerDown}/>
+    return <PulsatingSource x={x} y={y} size={2*refDistance/rolloffFactor} color={highlighted ? 'red' : 'orange'} movable={movable} onPointerDown={onPointerDown} ref={sourceElementRef}/>
 }
 
 export default AudioSource
