@@ -3,6 +3,10 @@
     transform-origin: 0% 100%;
 }
 
+.movable {
+    cursor: pointer;
+}
+
 .source {
     position: absolute;
     width: .5rem;

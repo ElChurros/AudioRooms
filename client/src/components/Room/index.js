@@ -21,6 +21,7 @@ const Room = () => {
     const [highlightedSource, setHighlightedSource] = useState(null)
     const [gain, setGain] = useState(1)
     const [prevGain, setPrevGain] = useState(0)
+    const [moveMode, setMoveMode] = useState(false)
     const listenerPos = useRef()
     const gainNodeRef = useRef()
     const handlersRef = useRef({})
@@ -29,6 +30,18 @@ const Room = () => {
     const navigate = useNavigate()
     const me = useMemo(() => users.find(u => u.id === socket.id), [users])
     const others = useMemo(() => users.filter(u => u.id !== socket.id), [users])
+
+    const sourcePosSetterFactory = (sourceId) => {
+        return (pos) => {
+            setSources(prev => prev.map(s => {
+                if (s.id !== sourceId) {
+                    return s
+                } else {
+                    return {...s, pos: pos}
+                }
+            }))
+        }
+    }
 
     useEffect(() => {
         gainNodeRef.current = audioContext.createGain()
@@ -136,7 +149,7 @@ const Room = () => {
         if (gain !== 0) {
             setPrevGain(gain)
         }
-        gainNodeRef.current.gain.setValueAtTime(gain, audioContext.currentTime); 
+        gainNodeRef.current.gain.setValueAtTime(gain, audioContext.currentTime);
     }, [gain])
 
     useEventListener('keydown', handleKeyPress)
@@ -145,12 +158,17 @@ const Room = () => {
     return <div className={styles.container}>
         <div className={styles.room}>
             <div className={styles.volume}>
+                <button onClick={() => setMoveMode(prev => !prev)}>
+                    <span className={`material-symbols-outlined ${styles.moveMode} ${moveMode ? styles.moving : ""}`}>
+                        open_with
+                    </span>
+                </button>
                 <button className={`material-symbols-outlined`} onClick={onVolumeToggle}>
                     {gain > 0.66
                         ? 'volume_up'
                         : gain > 0.33
                             ? 'volume_down'
-                            : gain > 0 
+                            : gain > 0
                                 ? 'volume_mute'
                                 : 'no_sound'
                     }
@@ -161,7 +179,7 @@ const Room = () => {
                     {addingSource && <PulsatingSource {...previewPos} size={5} color='#FF7F0088' />}
                     {sources.map(source => {
                         const { id, file, pos, gain } = source
-                            return <AudioSource key={id} filename={file} pos={pos} gain={gain} destinationRef={gainNodeRef} listenerPos={me.pos} highlighted={highlightedSource === source}/>
+                        return <AudioSource key={id} filename={file} pos={pos} gain={gain} destinationRef={gainNodeRef} listenerPos={me.pos} highlighted={highlightedSource === source} movable={moveMode} setPos={sourcePosSetterFactory(id)} mapRef={mapRef}/>
                     })}
                 </div>
                 {others.map(user => {

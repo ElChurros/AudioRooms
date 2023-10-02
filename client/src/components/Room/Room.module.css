@@ -16,6 +16,17 @@
     padding-left: 2.5rem;
 }
 
+
+
+.moveMode {
+    vertical-align: middle;
+    border-radius: .25rem;
+}
+
+.moving {
+    background-color: #979994;
+}
+
 .volume {
     position: fixed;
     top: 0;

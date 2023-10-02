@@ -1,8 +1,10 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import audioContext from "../../../audio-context"
 import PulsatingSource from "../../PulsatingSource"
+import useEventListener from "../../../hooks/useEventListener"
+import { clamp } from "../../../utils/maths"
 
-const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destinationRef, maxHearingDistance = 20, gain = 0.05, listenerPos, highlighted, ...props}) => {
+const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destinationRef, maxHearingDistance = 20, gain = 0.05, listenerPos, highlighted, movable, setPos, mapRef, ...props}) => {
     const { x = 0, y = 0, z = 0, direction = 0} = pos
     const {
         coneInnerAngle = 360,
@@ -24,6 +26,7 @@ const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destina
         loopEnd = 0,
         playbackRate = 1
     } = sourceProps
+    const [isDragging, setIsDragging] = useState(false)
     const sourceRef = useRef()
     const pannerRef = useRef()
     const gainRef = useRef()
@@ -79,7 +82,15 @@ const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destina
                 shouldStartPlayback = false
             }
         }
-    }, [coneInnerAngle, coneOuterAngle, coneOuterGain, destinationRef, detune, distanceModel, filename, gain, loop, loopEnd, loopStart, maxDistance, orientationX, orientationY, orientationZ, panningModel, playbackRate, refDistance, rolloffFactor, x, y, z])
+    }, [coneInnerAngle, coneOuterAngle, coneOuterGain, destinationRef, detune, distanceModel, filename, gain, loop, loopEnd, loopStart, maxDistance, orientationX, orientationY, orientationZ, panningModel, playbackRate, refDistance, rolloffFactor]) //eslint-disable-line
+
+    useEffect(() => {
+        if (pannerRef.current) {
+            pannerRef.current.positionX.setValueAtTime(x, audioContext.currentTime)
+            pannerRef.current.positionY.setValueAtTime(y, audioContext.currentTime)
+            pannerRef.current.positionZ.setValueAtTime(z, audioContext.currentTime)
+        }
+    }, [x, y, z])
 
     useEffect(() => {
         if (!pannerRef.current || !gainRef)
@@ -97,7 +108,26 @@ const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destina
         pannerRef.current.orientationZ.setValueAtTime(orientationZ, audioContext.currentTime)
     }, [orientationX, orientationY, orientationZ, x, y, z, listenerPos.x, listenerPos.y, gain, maxHearingDistance])
 
-    return <PulsatingSource x={x} y={y} size={2*refDistance/rolloffFactor} color={highlighted ? 'red' : 'orange'}/>
+    const onPointerDown = e => {
+        if (movable)
+            setIsDragging(true)
+    }
+
+    const onPointerMove = e => {
+        if (isDragging) {
+            const { x, y, width, height } = mapRef.current.getBoundingClientRect()
+            setPos({x: clamp((e.pageX - x - window.scrollX) * 100 / width, 0, 100), y: clamp((y - e.pageY + height + window.scrollY) * 100 / height, 0, 100)})
+        }
+    }
+
+    const onPointerUp = e => {
+        setIsDragging(false)
+    }
+
+    useEventListener('pointerup', onPointerUp)
+    useEventListener('pointermove', onPointerMove)
+
+    return <PulsatingSource x={x} y={y} size={2*refDistance/rolloffFactor} color={highlighted ? 'red' : 'orange'} movable={movable} onPointerDown={onPointerDown}/>
 }
 
 export default AudioSource

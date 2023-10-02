@@ -44,8 +44,8 @@ const RoomManager = ({ setHighlightedSource, sources, setPos, setAddingSource, m
         const onMouseMove = (e) => {
             const { x, y, width, height } = mapRef.current.getBoundingClientRect()
             setPos({
-                x: clamp(Math.round((e.pageX - x - window.scrollX) * 100 / width), 0, 100),
-                y: clamp(Math.round((y - e.pageY + height + window.scrollY) * 100 / height), 0, 100)
+                x: clamp((e.pageX - x - window.scrollX) * 100 / width, 0, 100),
+                y: clamp((y - e.pageY + height + window.scrollY) * 100 / height, 0, 100)
             })
         }
 
