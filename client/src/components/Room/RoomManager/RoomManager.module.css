@@ -127,6 +127,36 @@
     margin-right: .5rem;
 }
 
+.content li {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    margin-top: .25rem;
+    margin-bottom: .25rem;
+    padding-left: .5rem;
+    padding-right: .5rem;
+    border-radius: .5rem;
+}
+
+.content li:hover {
+    background-color: #979994;
+}
+
+.content li span {
+    text-overflow: ellipsis;
+}
+
+.delete {
+    cursor: pointer;
+}
+
+.delete:hover {
+    color: darkred;
+}
+
 ::-webkit-scrollbar {
     width: .5rem;
     height: .5rem;

@@ -4,7 +4,7 @@ const cors = require('cors')
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const path = require('path')
-const { addUserToRoom, removeUserFromRoom, getUserRoom, getUser, getRoom, addSourceToRoom } = require('./users.js')
+const { addUserToRoom, removeUserFromRoom, getUserRoom, getUser, getRoom, addSourceToRoom, removeSourceFromRoom } = require('./users.js')
 const { clamp } = require('./utils.js')
 const { audioFiles } = require('./sounds.js')
 
@@ -17,12 +17,21 @@ app.use(express.json())
 app.use('/file', express.static('public'))
 app.use(express.static('client/build'))
 
-app.post('/add-source', (req, res) => {
+app.post('/source', (req, res) => {
     const {pos, id, filename} = req.body
     res.status(201).end()
     const room = getUserRoom(id)
     const source = addSourceToRoom(filename, pos, room)
     io.to(`${room.id}`).emit('source-added', source)
+})
+
+app.delete('/source/:sourceId', (req, res) => {
+    const socketId = req.get('x-socket-id')
+    const sourceId = req.params.sourceId
+    const room = getUserRoom(socketId)
+    removeSourceFromRoom(sourceId, room)
+    io.to(`${room.id}`).emit('source-removed', sourceId)
+    res.status(204).end()
 })
 
 app.get('/available-audio-files', (req, res) => {

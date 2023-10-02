@@ -15,9 +15,10 @@ const DIRECTION_CHANGE_INTERVAL = 20
 
 const Room = () => {
     const [users, setUsers] = useState([])
-    const [roomData, setRoomData] = useState()
+    const [sources, setSources] = useState([])
     const [previewPos, setPreviewPos] = useState({ x: 0, y: 0 })
     const [addingSource, setAddingSource] = useState(false)
+    const [highlightedSource, setHighlightedSource] = useState(null)
     const [gain, setGain] = useState(1)
     const [prevGain, setPrevGain] = useState(0)
     const listenerPos = useRef()
@@ -26,8 +27,8 @@ const Room = () => {
     const mapRef = useRef()
     const { roomId } = useParams()
     const navigate = useNavigate()
-    const me = useMemo(users.find(u => u.id === socket.id), [users])
-    const others = useMemo(users.filter(u => u.id !== socket.id), [users])
+    const me = useMemo(() => users.find(u => u.id === socket.id), [users])
+    const others = useMemo(() => users.filter(u => u.id !== socket.id), [users])
 
     useEffect(() => {
         gainNodeRef.current = audioContext.createGain()
@@ -35,9 +36,7 @@ const Room = () => {
         gainNodeRef.current.connect(audioContext.destination)
         const callbacks = {
             'initial-users': (room) => {
-                if (room.roomData) {
-                    setRoomData(room.roomData)
-                }
+                setSources(room.sources)
                 setUsers(room.users.map(user => ({ ...user, initiator: true })))
             },
             'user-joined': (user) => {
@@ -55,8 +54,11 @@ const Room = () => {
                 }))
             },
             'source-added': (source) => {
-                setRoomData(prev => { return { ...prev, sources: [...prev.sources, source] } })
+                setSources(prev => [...prev, source])
                 setAddingSource(false)
+            },
+            'source-removed': (sourceId) => {
+                setSources(prev => prev.filter(s => s.id !== sourceId))
             }
         }
         for (const [eventName, callback] of Object.entries(callbacks))
@@ -157,9 +159,9 @@ const Room = () => {
             <div className={styles.map} ref={mapRef}>
                 <div className={styles.mask}>
                     {addingSource && <PulsatingSource {...previewPos} size={5} color='#FF7F0088' />}
-                    {roomData && roomData.sources.map(source => {
-                        const { name, file, pos, gain } = source
-                            return <AudioSource key={name} filename={file} pos={pos} gain={gain} destinationRef={gainNodeRef} listenerPos={me.pos} />
+                    {sources.map(source => {
+                        const { id, file, pos, gain } = source
+                            return <AudioSource key={id} filename={file} pos={pos} gain={gain} destinationRef={gainNodeRef} listenerPos={me.pos} highlighted={highlightedSource === source}/>
                     })}
                 </div>
                 {others.map(user => {
@@ -170,7 +172,7 @@ const Room = () => {
                 {me ? <Player pos={me.pos} isSelf /> : ''}
             </div>
         </div>
-        <RoomManager setPos={setPreviewPos} addingSource={addingSource} setAddingSource={setAddingSource} mapRef={mapRef} />
+        <RoomManager sources={sources} setPos={setPreviewPos} addingSource={addingSource} setAddingSource={setAddingSource} setHighlightedSource={setHighlightedSource} mapRef={mapRef} />
     </div>
 }
 

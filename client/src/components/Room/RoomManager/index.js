@@ -3,7 +3,7 @@ import { clamp } from '../../../utils/maths'
 import socket from '../../../socket'
 import styles from './RoomManager.module.css'
 
-const RoomManager = ({ setPos, setAddingSource, mapRef }) => {
+const RoomManager = ({ setHighlightedSource, sources, setPos, setAddingSource, mapRef }) => {
     const [availableFiles, setAvailableFiles] = useState([])
     const [selectedFile, setSelectedFile] = useState('')
     const [placingSource, setPlacingSource] = useState(false)
@@ -24,6 +24,15 @@ const RoomManager = ({ setPos, setAddingSource, mapRef }) => {
         setAddingSource(true)
         setCollapsed(true)
     }, [setAddingSource])
+
+    const onDelete = (source) => {
+        fetch(`${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/source/${source.id}`, {
+            method: 'DELETE',
+            headers: {
+                "X-Socket-Id": `${socket.id}`
+            }
+        })
+    }
 
     const copyRoomLink = useCallback(() => {
         navigator.clipboard.writeText(window.location.href).then(() => {
@@ -56,7 +65,7 @@ const RoomManager = ({ setPos, setAddingSource, mapRef }) => {
                 y: clamp(Math.round((y - e.pageY + height) * 100 / height), 0, 100)
             }
             setPos(finalPos)
-            fetch(`${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/add-source`, {
+            fetch(`${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/source`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json",
@@ -118,6 +127,17 @@ const RoomManager = ({ setPos, setAddingSource, mapRef }) => {
                 </select>
                 <h5>2. Click on the map to place it</h5>
                 <h5>Press Escape if you want to cancel</h5>
+            </div>
+            <div>
+                <h1>Remove sounds</h1>
+                <ul>
+                    {sources && sources.map(source => {
+                        return <li key={source.id} onMouseEnter={() => setHighlightedSource(source)} onMouseLeave={() => setHighlightedSource(null)}>
+                            {source.name}
+                            <span className={`material-symbols-outlined ${styles.delete}`} onClick={() => onDelete(source)}>delete</span>
+                        </li>
+                    })}
+                </ul>
             </div>
             <div>
                 <h1>Invite friends</h1>

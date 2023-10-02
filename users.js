@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid')
-const fs = require('fs')
+const path = require('path')
 
 const rooms = []
 const socketToRoom = {}
@@ -13,17 +13,7 @@ function randomPos() {
 }
 
 const createRoom = (roomId) => {
-    let roomData
-    try {
-        const data = fs.readFileSync(`maps/${roomId}-room.json`)
-        roomData = JSON.parse(data)
-    } catch (error) {
-        roomData = {
-            maxUsers: process.env.DEFAULT_MAX_USERS_IN_ROOM,
-            sources: []
-        }
-    }
-    const newRoomIndex = rooms.push({ id: roomId, users: [], roomData: roomData }) - 1
+    const newRoomIndex = rooms.push({ id: roomId, users: [], sources: [] }) - 1
     return rooms[newRoomIndex]
 }
 
@@ -67,14 +57,19 @@ const removeUserFromRoom = (userId) => {
 
 const addSourceToRoom = (filename, pos, room) => {
     const source = {
-        name: uuidv4(),
+        id: uuidv4(),
+        name: path.basename(filename),
         file: filename,
         pos: {...pos, direction: 0},
         gain: 0.05,
         omnidirectional: true
     }
-    room.roomData.sources.push(source)
+    room.sources.push(source)
     return source
+}
+
+const removeSourceFromRoom = (id, room) => {
+    room.sources.splice(room.sources.findIndex(s => s.id === id), 1)
 }
 
 module.exports = {
@@ -84,4 +79,5 @@ module.exports = {
     addUserToRoom,
     removeUserFromRoom,
     addSourceToRoom,
+    removeSourceFromRoom,
 }

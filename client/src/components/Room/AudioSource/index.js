@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import audioContext from "../../../audio-context"
 import PulsatingSource from "../../PulsatingSource"
 
-const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destinationRef, maxHearingDistance = 20, gain = 0.05, listenerPos, ...props}) => {
+const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destinationRef, maxHearingDistance = 20, gain = 0.05, listenerPos, highlighted, ...props}) => {
     const { x = 0, y = 0, z = 0, direction = 0} = pos
     const {
         coneInnerAngle = 360,
@@ -97,7 +97,7 @@ const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destina
         pannerRef.current.orientationZ.setValueAtTime(orientationZ, audioContext.currentTime)
     }, [orientationX, orientationY, orientationZ, x, y, z, listenerPos.x, listenerPos.y, gain, maxHearingDistance])
 
-    return <PulsatingSource x={x} y={y} size={2*refDistance/rolloffFactor} />
+    return <PulsatingSource x={x} y={y} size={2*refDistance/rolloffFactor} color={highlighted ? 'red' : 'orange'}/>
 }
 
 export default AudioSource
