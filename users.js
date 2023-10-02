@@ -3,6 +3,7 @@ const path = require('path')
 
 const rooms = []
 const socketToRoom = {}
+const sourceToRoom = {}
 
 function randomPos() {
     return {
@@ -56,8 +57,9 @@ const removeUserFromRoom = (userId) => {
 }
 
 const addSourceToRoom = (filename, pos, room) => {
+    const id = uuidv4()
     const source = {
-        id: uuidv4(),
+        id: id,
         name: path.basename(filename),
         file: filename,
         pos: {...pos, direction: 0},
@@ -65,11 +67,23 @@ const addSourceToRoom = (filename, pos, room) => {
         omnidirectional: true
     }
     room.sources.push(source)
+    sourceToRoom[id] = room.id
     return source
 }
 
 const removeSourceFromRoom = (id, room) => {
     room.sources.splice(room.sources.findIndex(s => s.id === id), 1)
+    delete sourceToRoom[id]
+}
+
+const moveSource = (id, pos) => {
+    const room = getRoom(sourceToRoom[id])
+    if (!room)
+        return
+    const source = room.sources.find(s => s.id === id)
+    if (!source)
+        return
+    source.pos = {...source.pos, ...pos}
 }
 
 module.exports = {
@@ -80,4 +94,5 @@ module.exports = {
     removeUserFromRoom,
     addSourceToRoom,
     removeSourceFromRoom,
+    moveSource
 }

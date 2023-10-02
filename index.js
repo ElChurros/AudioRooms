@@ -4,7 +4,7 @@ const cors = require('cors')
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const path = require('path')
-const { addUserToRoom, removeUserFromRoom, getUserRoom, getUser, getRoom, addSourceToRoom, removeSourceFromRoom } = require('./users.js')
+const { addUserToRoom, removeUserFromRoom, getUserRoom, getUser, getRoom, addSourceToRoom, removeSourceFromRoom, moveSource } = require('./users.js')
 const { clamp } = require('./utils.js')
 const { audioFiles } = require('./sounds.js')
 
@@ -117,6 +117,7 @@ io.on('connection', (socket) => {
 
     socket.on('source movement', (source) => {
         const room = getUserRoom(socket.id)
+        moveSource(source.id, source.pos)
         io.to(`${room.id}`).emit('source movement', {id: source.id, pos: source.pos})
     })
 })
