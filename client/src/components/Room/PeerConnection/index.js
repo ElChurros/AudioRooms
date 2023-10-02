@@ -80,7 +80,6 @@ const PeerConnection = ({ user, destinationRef }) => {
             navigate('/')
         })
         return () => {
-            console.log("cleaning up")
             for (const [eventName, callback] of Object.entries(callbacks))
                 socket.off(eventName, callback)
             peer.destroy()
