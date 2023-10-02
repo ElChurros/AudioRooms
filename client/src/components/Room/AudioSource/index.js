@@ -3,8 +3,9 @@ import audioContext from "../../../audio-context"
 import PulsatingSource from "../../PulsatingSource"
 import useEventListener from "../../../hooks/useEventListener"
 import { clamp } from "../../../utils/maths"
+import socket from "../../../socket"
 
-const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destinationRef, maxHearingDistance = 20, gain = 0.05, listenerPos, highlighted, movable, setPos, mapRef, ...props}) => {
+const AudioSource = ({filename, id, pos, sourceProps = {}, pannerProps = {}, destinationRef, maxHearingDistance = 20, gain = 0.05, listenerPos, highlighted, movable, mapRef, ...props}) => {
     const { x = 0, y = 0, z = 0, direction = 0} = pos
     const {
         coneInnerAngle = 360,
@@ -109,6 +110,7 @@ const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destina
     }, [orientationX, orientationY, orientationZ, x, y, z, listenerPos.x, listenerPos.y, gain, maxHearingDistance])
 
     const onPointerDown = e => {
+        e.stopPropagation()
         if (movable)
             setIsDragging(true)
     }
@@ -116,7 +118,8 @@ const AudioSource = ({filename, pos, sourceProps = {}, pannerProps = {}, destina
     const onPointerMove = e => {
         if (isDragging) {
             const { x, y, width, height } = mapRef.current.getBoundingClientRect()
-            setPos({x: clamp((e.pageX - x - window.scrollX) * 100 / width, 0, 100), y: clamp((y - e.pageY + height + window.scrollY) * 100 / height, 0, 100)})
+            const newPos = {x: clamp((e.pageX - x - window.scrollX) * 100 / width, 0, 100), y: clamp((y - e.pageY + height + window.scrollY) * 100 / height, 0, 100)}
+            socket.emit('source movement', {id: id, pos: newPos})
         }
     }
 

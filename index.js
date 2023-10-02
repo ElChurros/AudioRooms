@@ -114,6 +114,11 @@ io.on('connection', (socket) => {
             }
             io.to(`${room.id}`).emit('user movement', user)
     })
+
+    socket.on('source movement', (source) => {
+        const room = getUserRoom(socket.id)
+        io.to(`${room.id}`).emit('source movement', {id: source.id, pos: source.pos})
+    })
 })
 
 server.listen(process.env.PORT, () => {

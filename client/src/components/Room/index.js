@@ -31,18 +31,6 @@ const Room = () => {
     const me = useMemo(() => users.find(u => u.id === socket.id), [users])
     const others = useMemo(() => users.filter(u => u.id !== socket.id), [users])
 
-    const sourcePosSetterFactory = (sourceId) => {
-        return (pos) => {
-            setSources(prev => prev.map(s => {
-                if (s.id !== sourceId) {
-                    return s
-                } else {
-                    return {...s, pos: pos}
-                }
-            }))
-        }
-    }
-
     useEffect(() => {
         gainNodeRef.current = audioContext.createGain()
         gainNodeRef.current.gain.value = 1
@@ -64,6 +52,15 @@ const Room = () => {
                         return u
                     else
                         return user
+                }))
+            },
+            'source movement': ({id, pos}) => {
+                setSources(prev => prev.map(s => {
+                    if (s.id !== id)
+                        return s
+                    else {
+                        return {...s, pos: pos}
+                    }
                 }))
             },
             'source-added': (source) => {
@@ -179,7 +176,7 @@ const Room = () => {
                     {addingSource && <PulsatingSource {...previewPos} size={5} color='#FF7F0088' />}
                     {sources.map(source => {
                         const { id, file, pos, gain } = source
-                        return <AudioSource key={id} filename={file} pos={pos} gain={gain} destinationRef={gainNodeRef} listenerPos={me.pos} highlighted={highlightedSource === source} movable={moveMode} setPos={sourcePosSetterFactory(id)} mapRef={mapRef}/>
+                        return <AudioSource key={id} id={id} filename={file} pos={pos} gain={gain} destinationRef={gainNodeRef} listenerPos={me.pos} highlighted={highlightedSource === source} movable={moveMode} mapRef={mapRef}/>
                     })}
                 </div>
                 {others.map(user => {
