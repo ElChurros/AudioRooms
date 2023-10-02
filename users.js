@@ -27,7 +27,7 @@ const getRoom = (roomId) => {
 
 const getUserRoom = (userId) => {
     const roomId = socketToRoom[userId]
-    return rooms.find(r => r.id == roomId)
+    return getRoom(roomId)
 }
 
 const getUser = (userId) => {
