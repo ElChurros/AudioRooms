@@ -129,15 +129,17 @@ const RoomManager = ({ setHighlightedSource, sources, setPos, setAddingSource, m
                 <h5>Press Escape if you want to cancel</h5>
             </div>
             <div>
-                <h1>Remove sounds</h1>
-                <ul>
-                    {sources && sources.map(source => {
-                        return <li key={source.id} onMouseEnter={() => setHighlightedSource(source)} onMouseLeave={() => setHighlightedSource(null)}>
-                            {source.name}
-                            <span className={`material-symbols-outlined ${styles.delete}`} onClick={() => onDelete(source)}>delete</span>
-                        </li>
-                    })}
-                </ul>
+                {sources.length > 0 && <>
+                    <h1>Remove sounds</h1>
+                    <ul>
+                        {sources.map(source => {
+                            return <li key={source.id} onMouseEnter={() => setHighlightedSource(source)} onMouseLeave={() => setHighlightedSource(null)}>
+                                {source.name}
+                                <span className={`material-symbols-outlined ${styles.delete}`} onClick={() => onDelete(source)}>delete</span>
+                            </li>
+                        })}
+                    </ul>
+                </>}
             </div>
             <div>
                 <h1>Invite friends</h1>
