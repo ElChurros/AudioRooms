@@ -8,6 +8,8 @@ const { addUserToRoom, removeUserFromRoom, getUserRoom, getUser, getRoom, addSou
 const { clamp } = require('./utils.js')
 const { audioFiles } = require('./sounds.js')
 
+const PORT = process.env.PORT || 8000
+
 const app = express()
 
 console.log(__dirname)
@@ -53,7 +55,7 @@ const io = new Server(server, {
 io.on('connection', (socket) => {    
     socket.on('join-room', (roomId, answer) => {
         const room = getRoom(roomId)
-        if (room && room.users.length >= process.env.DEFAULT_MAX_USERS_IN_ROOM) {
+        if (room && room.users.length >= 8) {
             answer({status: 'Access denied : room is full'})
             return
         }
@@ -122,6 +124,6 @@ io.on('connection', (socket) => {
     })
 })
 
-server.listen(process.env.PORT, () => {
-    console.log(`Server listening on port ${process.env.PORT}`)
+server.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`)
 })
