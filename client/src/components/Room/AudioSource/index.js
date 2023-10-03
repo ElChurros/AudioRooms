@@ -39,7 +39,7 @@ const AudioSource = ({filename, id, pos, sourceProps = {}, pannerProps = {}, des
         let playbackStarted = false
         let shouldStartPlayback = true
         sourceRef.current = audioContext.createBufferSource()
-        fetch(`${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/file/${filename}`).then(res => {
+        fetch(`${process.env.REACT_APP_HOST}`).then(res => {
             return res.arrayBuffer()
         }).then(arrayBuffer => {
             return audioContext.decodeAudioData(arrayBuffer)
