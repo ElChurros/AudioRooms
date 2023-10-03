@@ -11,7 +11,7 @@ const RoomManager = ({ setHighlightedSource, sources, setPos, setAddingSource, m
     const [linkCopied, setLinkCopied] = useState(false)
 
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_HOST}/available-audio-files`)
+        fetch(`${process.env.REACT_APP_SERVER}/available-audio-files`)
             .then(res => res.json())
             .then(files => {
                 setAvailableFiles(files)
@@ -26,7 +26,7 @@ const RoomManager = ({ setHighlightedSource, sources, setPos, setAddingSource, m
     }, [setAddingSource])
 
     const onDelete = (source) => {
-        fetch(`${process.env.REACT_APP_HOST}/source/${source.id}`, {
+        fetch(`${process.env.REACT_APP_SERVER}/source/${source.id}`, {
             method: 'DELETE',
             headers: {
                 "X-Socket-Id": `${socket.id}`
@@ -65,7 +65,7 @@ const RoomManager = ({ setHighlightedSource, sources, setPos, setAddingSource, m
                 y: clamp(Math.round((y - e.pageY + height) * 100 / height), 0, 100)
             }
             setPos(finalPos)
-            fetch(`${process.env.REACT_APP_HOST}/source`, {
+            fetch(`${process.env.REACT_APP_SERVER}/source`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json",
