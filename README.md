@@ -10,6 +10,7 @@ cd AudioRooms
 npm install
 cd client
 npm install
+echo "REACT_APP_SERVER=http://localhost:8000" > .env.production.local"
 npm run build
 cd ..
 npm start
@@ -19,6 +20,7 @@ Once the server has started, visit [localhost:8000](http://localhost:8000)
 
 ## Running the app with hot-reload
 If you wish to modify the frontend React with hot-reload enabled, run the React development server from the `client` directory:
+
 ```bash
 cd client
 npm start
