@@ -63,7 +63,7 @@ const addSourceToRoom = (filename, pos, room) => {
         name: path.basename(filename),
         file: filename,
         pos: {...pos, direction: 0},
-        gain: 0.05,
+        gain: 0.1,
         omnidirectional: true
     }
     room.sources.push(source)
