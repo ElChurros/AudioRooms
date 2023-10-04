@@ -47,6 +47,21 @@
     border: none;
 }
 
+.volume button span {
+    vertical-align: middle;
+}
+
+.volume select {
+    background-color: #979994;
+    border-radius: .25rem;
+    margin-right: .5rem;
+    width: 15rem;
+}
+
+.volume option {
+    text-overflow: ellipsis;
+}
+
 .map {
     position: relative;
     min-width: 80vh;

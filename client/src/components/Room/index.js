@@ -22,8 +22,13 @@ const Room = () => {
     const [gain, setGain] = useState(1)
     const [prevGain, setPrevGain] = useState(0)
     const [moveMode, setMoveMode] = useState(false)
+    const [inputDevices, setInputDevices] = useState([])
+    const [mute, setMute] = useState(false)
+    const micGainRef = useRef(audioContext.createGain())
+    const currentInputStreamSource = useRef()
+    const currentInputStreamDestination = useRef(audioContext.createMediaStreamDestination())
     const listenerPos = useRef()
-    const gainNodeRef = useRef()
+    const gainNodeRef = useRef(audioContext.createGain())
     const handlersRef = useRef({})
     const mapRef = useRef()
     const { roomId } = useParams()
@@ -32,7 +37,6 @@ const Room = () => {
     const others = useMemo(() => users.filter(u => u.id !== socket.id), [users])
 
     useEffect(() => {
-        gainNodeRef.current = audioContext.createGain()
         gainNodeRef.current.gain.value = 1
         gainNodeRef.current.connect(audioContext.destination)
         const callbacks = {
@@ -73,10 +77,33 @@ const Room = () => {
         }
         for (const [eventName, callback] of Object.entries(callbacks))
             socket.on(eventName, callback)
-        socket.emit('join-room', roomId, res => {
-            if (res.status !== 'ok') {
-                navigate('/join')
+
+        const audioCtxCheck = () => {
+            if (audioContext.state !== 'running') {
+                audioContext.resume()
             }
+            document.removeEventListener('mousemove', audioCtxCheck)
+        }
+
+        document.addEventListener('mousemove', audioCtxCheck)
+        
+        navigator.mediaDevices.getUserMedia({audio:true, video: false}).then(() => {
+            navigator.mediaDevices.enumerateDevices().then(devices => {
+                const audioInputs = devices.filter(d => d.kind === 'audioinput')
+                setInputDevices(audioInputs)
+                navigator.mediaDevices.getUserMedia({audio: true, deviceId: audioInputs[0].deviceId}).then(stream => {
+                    currentInputStreamSource.current = audioContext.createMediaStreamSource(stream)
+                    currentInputStreamSource.current.connect(micGainRef.current)
+                    micGainRef.current.connect(currentInputStreamDestination.current)
+                })
+                socket.emit('join-room', roomId, res => {
+                    if (res.status !== 'ok') {
+                        navigate('/join')
+                    }
+                })
+            })
+        }).catch((err) => {
+            navigate('/join')
         })
 
         return () => {
@@ -88,6 +115,7 @@ const Room = () => {
                 for (const [eventName, callback] of Object.entries(callbacks))
                     socket.off(eventName, callback)
             }
+            document.removeEventListener('mousemove', audioCtxCheck)
         }
     }, [roomId, navigate])
 
@@ -134,6 +162,10 @@ const Room = () => {
         }
     }, [])
 
+    useEffect(() => {
+        micGainRef.current.gain.value = mute ? 0 : 1
+    }, [mute])
+
     const onVolumeToggle = useCallback(() => {
         if (gain !== 0) {
             setGain(0)
@@ -149,6 +181,17 @@ const Room = () => {
         gainNodeRef.current.gain.setValueAtTime(gain, audioContext.currentTime);
     }, [gain])
 
+    const handleDeviceChange = useCallback((e) => {
+        const selectedDevice = inputDevices.find(d => d.deviceId === e.target.value)
+        navigator.mediaDevices.getUserMedia({audio: true, deviceId: selectedDevice.deviceId}).then(stream => {
+            currentInputStreamSource.current.disconnect(micGainRef.current)
+            currentInputStreamSource.current = audioContext.createMediaStreamSource(stream)
+            currentInputStreamSource.current.connect(micGainRef.current)
+        }).catch(err => {
+            console.error(err)
+        })
+    }, [inputDevices])
+
     useEventListener('keydown', handleKeyPress)
     useEventListener('keyup', handleKeyPress)
 
@@ -160,6 +203,16 @@ const Room = () => {
                         open_with
                     </span>
                 </button>
+                <button onClick={() => setMute(prev => !prev)}>
+                    <span className='material-symbols-outlined'>
+                        {mute ? 'mic_off' : 'mic'}
+                    </span>
+                </button>
+                <select onChange={handleDeviceChange}>
+                    {inputDevices.map(d => 
+                        <option key={d.deviceId} value={d.deviceId}>{d.label}</option>    
+                    )}
+                </select>
                 <button className={`material-symbols-outlined`} onClick={onVolumeToggle}>
                     {gain > 0.66
                         ? 'volume_up'
@@ -181,7 +234,7 @@ const Room = () => {
                 </div>
                 {others.map(user => {
                     return <Player key={user.id} pos={user.pos} isSelf={false}>
-                        <PeerConnection user={user} destinationRef={gainNodeRef} />
+                        <PeerConnection user={user} destinationRef={gainNodeRef} inputStreamRef={currentInputStreamDestination}/>
                     </Player>
                 })}
                 {me ? <Player pos={me.pos} isSelf /> : ''}

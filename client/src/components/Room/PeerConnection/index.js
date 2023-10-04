@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react"
 import Peer from 'simple-peer'
 import socket from "../../../socket"
 import audioContext from "../../../audio-context"
-import { useNavigate } from "react-router-dom"
 
 const positionPanner = (panner, pos) => {
     if (panner.positionX) {
@@ -19,10 +18,9 @@ const positionPanner = (panner, pos) => {
     }
 }
 
-const PeerConnection = ({ user, destinationRef }) => {
+const PeerConnection = ({ user, destinationRef, inputStreamRef }) => {
     const { id, initiator, pos } = user
     const pannerRef = useRef()
-    const navigate = useNavigate
 
     useEffect(() => {
         const peer = new Peer({
@@ -70,15 +68,7 @@ const PeerConnection = ({ user, destinationRef }) => {
         }
         for (const [eventName, callback] of Object.entries(callbacks))
             socket.on(eventName, callback)
-
-        navigator.mediaDevices.getUserMedia({
-            video: false,
-            audio: true
-        }).then((stream) => {
-            peer.addStream(stream)
-        }).catch(() => { 
-            navigate('/')
-        })
+        peer.addStream(inputStreamRef.current.stream)
         return () => {
             for (const [eventName, callback] of Object.entries(callbacks))
                 socket.off(eventName, callback)
