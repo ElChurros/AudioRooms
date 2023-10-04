@@ -5,16 +5,27 @@ import useEventListener from "../../../hooks/useEventListener"
 import { clamp } from "../../../utils/maths"
 import socket from "../../../socket"
 
-const AudioSource = ({filename, id, pos, sourceProps = {}, pannerProps = {}, destinationRef, maxHearingDistance = 20, gain = 0.05, listenerPos, highlighted, movable, mapRef, ...props}) => {
-    const { x = 0, y = 0, z = 0, direction = 0} = pos
+const muteBeyondMaxDistance = (gainNode, gain, listenerPos, x, y, maxHearingDistance, smooth) => {
+    if (!gainNode)
+        return
+    const distance = Math.sqrt(Math.pow(listenerPos.x - x, 2) + Math.pow(listenerPos.y - y, 2))
+    const timing = audioContext.currentTime + (smooth ? 0.3 : 0)
+    if (distance > maxHearingDistance)
+        gainNode.gain.linearRampToValueAtTime(0, timing)
+    else
+        gainNode.gain.linearRampToValueAtTime(gain, timing)
+}
+
+const AudioSource = ({ filename, id, pos, sourceProps = {}, pannerProps = {}, destinationRef, maxHearingDistance = 20, gain = 0.5, listenerPos, highlighted, movable, mapRef, ...props }) => {
+    const { x = 0, y = 0, z = 0, direction = 0 } = pos
     const {
         coneInnerAngle = 360,
         coneOuterAngle = 0,
         coneOuterGain = 0,
         distanceModel = 'exponential',
         maxDistance = 10000,
-        orientationX = Math.cos(((direction + 180) % 360) * Math.PI/180),
-        orientationY = Math.sin(((direction + 180) % 360) * Math.PI/180),
+        orientationX = Math.cos(((direction + 180) % 360) * Math.PI / 180),
+        orientationY = Math.sin(((direction + 180) % 360) * Math.PI / 180),
         orientationZ = 0,
         panningModel = 'HRTF',
         refDistance = 5,
@@ -67,8 +78,9 @@ const AudioSource = ({filename, id, pos, sourceProps = {}, pannerProps = {}, des
             pannerRef.current.orientationZ.setValueAtTime(orientationZ, audioContext.currentTime)
             gainRef.current = audioContext.createGain()
             gainRef.current.gain.setValueAtTime(gain, audioContext.currentTime)
-            
+
             sourceRef.current.connect(pannerRef.current).connect(gainRef.current).connect(destinationRef.current)
+            muteBeyondMaxDistance(gainRef.current, gain, listenerPos, x, y, maxHearingDistance, false)
             if (shouldStartPlayback) {
                 sourceRef.current.start(audioContext.currentTime)
                 playbackStarted = true
@@ -76,8 +88,8 @@ const AudioSource = ({filename, id, pos, sourceProps = {}, pannerProps = {}, des
         }).catch(err => {
             console.error(err)
         })
-        
-        return () => {            
+
+        return () => {
             if (playbackStarted) {
                 sourceRef.current.stop()
                 sourceRef.current.disconnect()
@@ -96,26 +108,22 @@ const AudioSource = ({filename, id, pos, sourceProps = {}, pannerProps = {}, des
     }, [x, y, z])
 
     useEffect(() => {
-        if (!pannerRef.current || !gainRef)
+        muteBeyondMaxDistance(gainRef.current, gain, listenerPos, x, y, maxHearingDistance, true)
+        if (!pannerRef.current)
             return
-        const distance = Math.sqrt(Math.pow(listenerPos.x - x, 2) + Math.pow(listenerPos.y - y, 2))
-        if (distance > maxHearingDistance)
-            gainRef.current.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.3)
-        else
-            gainRef.current.gain.linearRampToValueAtTime(gain, audioContext.currentTime + 0.3)
         pannerRef.current.positionX.setValueAtTime(x, audioContext.currentTime)
         pannerRef.current.positionY.setValueAtTime(y, audioContext.currentTime)
         pannerRef.current.positionZ.setValueAtTime(z, audioContext.currentTime)
         pannerRef.current.orientationX.setValueAtTime(orientationX, audioContext.currentTime)
         pannerRef.current.orientationY.setValueAtTime(orientationY, audioContext.currentTime)
         pannerRef.current.orientationZ.setValueAtTime(orientationZ, audioContext.currentTime)
-    }, [orientationX, orientationY, orientationZ, x, y, z, listenerPos.x, listenerPos.y, gain, maxHearingDistance])
+    }, [orientationX, orientationY, orientationZ, x, y, z, listenerPos, gain, maxHearingDistance])
 
     const onPointerDown = (e) => {
         e.preventDefault()
         if (movable) {
             const sourceRect = sourceElementRef.current.getBoundingClientRect()
-            const dragOffset = {x: sourceRect.x + sourceRect.width/2 - e.clientX, y: sourceRect.y + sourceRect.height/2 - e.clientY}
+            const dragOffset = { x: sourceRect.x + sourceRect.width / 2 - e.clientX, y: sourceRect.y + sourceRect.height / 2 - e.clientY }
             dragOffsetRef.current = dragOffset
             setIsDragging(true)
         }
@@ -125,8 +133,8 @@ const AudioSource = ({filename, id, pos, sourceProps = {}, pannerProps = {}, des
         e.preventDefault()
         if (isDragging) {
             const { x, y, width, height } = mapRef.current.getBoundingClientRect()
-            const newPos = {x: clamp((e.pageX - x - window.scrollX + dragOffsetRef.current.x) * 100 / width, 0, 100), y: clamp((y - e.pageY + height + window.scrollY - dragOffsetRef.current.y) * 100 / height, 0, 100)}
-            socket.emit('source movement', {id: id, pos: newPos})
+            const newPos = { x: clamp((e.pageX - x - window.scrollX + dragOffsetRef.current.x) * 100 / width, 0, 100), y: clamp((y - e.pageY + height + window.scrollY - dragOffsetRef.current.y) * 100 / height, 0, 100) }
+            socket.emit('source movement', { id: id, pos: newPos })
         }
     }, [id, isDragging, mapRef])
 
@@ -138,7 +146,7 @@ const AudioSource = ({filename, id, pos, sourceProps = {}, pannerProps = {}, des
     useEventListener('pointerup', onPointerUp)
     useEventListener('pointermove', onPointerMove)
 
-    return <PulsatingSource x={x} y={y} size={2*refDistance/rolloffFactor} color={highlighted ? 'red' : 'orange'} movable={movable} onPointerDown={onPointerDown} ref={sourceElementRef}/>
+    return <PulsatingSource x={x} y={y} size={2 * refDistance / rolloffFactor} color={highlighted ? 'red' : 'orange'} movable={movable} onPointerDown={onPointerDown} ref={sourceElementRef} />
 }
 
 export default AudioSource
