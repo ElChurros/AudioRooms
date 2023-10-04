@@ -91,7 +91,7 @@ const Room = () => {
             navigator.mediaDevices.enumerateDevices().then(devices => {
                 const audioInputs = devices.filter(d => d.kind === 'audioinput')
                 setInputDevices(audioInputs)
-                navigator.mediaDevices.getUserMedia({audio: true, deviceId: audioInputs[0].deviceId}).then(stream => {
+                navigator.mediaDevices.getUserMedia({audio: {deviceId: audioInputs[0].deviceId}}).then(stream => {
                     currentInputStreamSource.current = audioContext.createMediaStreamSource(stream)
                     currentInputStreamSource.current.connect(micGainRef.current)
                     micGainRef.current.connect(currentInputStreamDestination.current)
@@ -181,9 +181,9 @@ const Room = () => {
         gainNodeRef.current.gain.setValueAtTime(gain, audioContext.currentTime);
     }, [gain])
 
-    const handleDeviceChange = useCallback((e) => {
+    const selectDevice = useCallback((e) => {
         const selectedDevice = inputDevices.find(d => d.deviceId === e.target.value)
-        navigator.mediaDevices.getUserMedia({audio: true, deviceId: selectedDevice.deviceId}).then(stream => {
+        navigator.mediaDevices.getUserMedia({audio: {deviceId: selectedDevice.deviceId}}).then(stream => {
             currentInputStreamSource.current.disconnect(micGainRef.current)
             currentInputStreamSource.current = audioContext.createMediaStreamSource(stream)
             currentInputStreamSource.current.connect(micGainRef.current)
@@ -208,7 +208,7 @@ const Room = () => {
                         {mute ? 'mic_off' : 'mic'}
                     </span>
                 </button>
-                <select onChange={handleDeviceChange}>
+                <select onChange={selectDevice}>
                     {inputDevices.map(d => 
                         <option key={d.deviceId} value={d.deviceId}>{d.label}</option>    
                     )}
