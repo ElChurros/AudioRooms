@@ -24,9 +24,11 @@ const Room = () => {
     const [moveMode, setMoveMode] = useState(false)
     const [inputDevices, setInputDevices] = useState([])
     const [mute, setMute] = useState(false)
+    const [selectedMic, setSelectedMic] = useState('')
     const micGainRef = useRef(audioContext.createGain())
     const currentInputStreamSource = useRef()
     const currentInputStreamDestination = useRef(audioContext.createMediaStreamDestination())
+    const currentMicDeviceId = useRef()
     const listenerPos = useRef()
     const gainNodeRef = useRef(audioContext.createGain())
     const handlersRef = useRef({})
@@ -36,9 +38,21 @@ const Room = () => {
     const me = useMemo(() => users.find(u => u.id === socket.id), [users])
     const others = useMemo(() => users.filter(u => u.id !== socket.id), [users])
 
+    const plugAudioInputDevice = useCallback((deviceId) => {
+        return navigator.mediaDevices.getUserMedia({audio: {deviceId: deviceId}}).then(stream => {
+            currentMicDeviceId.current = deviceId
+            currentInputStreamSource.current && currentInputStreamSource.current.disconnect(micGainRef.current)
+            currentInputStreamSource.current = audioContext.createMediaStreamSource(stream)
+            currentInputStreamSource.current.connect(micGainRef.current)
+        }).catch(err => {
+            console.error(err)
+        })
+    }, [])
+
     useEffect(() => {
         gainNodeRef.current.gain.value = 1
         gainNodeRef.current.connect(audioContext.destination)
+        micGainRef.current.connect(currentInputStreamDestination.current)
         const callbacks = {
             'initial-users': (room) => {
                 setSources(room.sources)
@@ -86,16 +100,23 @@ const Room = () => {
         }
 
         document.addEventListener('mousemove', audioCtxCheck)
-        
+
+        const onDeviceChange = () => {
+            navigator.mediaDevices.enumerateDevices().then(devices => {
+                const audioInputs = devices.filter(d => d.kind === 'audioinput')
+                setInputDevices(audioInputs)
+                if (!audioInputs.find(i => i.deviceId === currentMicDeviceId.current)) {
+                    setSelectedMic(audioInputs[0].deviceId)
+                    plugAudioInputDevice(audioInputs[0].deviceId)
+                }
+            })
+        }
+
         navigator.mediaDevices.getUserMedia({audio:true, video: false}).then(() => {
             navigator.mediaDevices.enumerateDevices().then(devices => {
                 const audioInputs = devices.filter(d => d.kind === 'audioinput')
                 setInputDevices(audioInputs)
-                navigator.mediaDevices.getUserMedia({audio: {deviceId: audioInputs[0].deviceId}}).then(stream => {
-                    currentInputStreamSource.current = audioContext.createMediaStreamSource(stream)
-                    currentInputStreamSource.current.connect(micGainRef.current)
-                    micGainRef.current.connect(currentInputStreamDestination.current)
-                })
+                plugAudioInputDevice(audioInputs[0])
                 socket.emit('join-room', roomId, res => {
                     if (res.status !== 'ok') {
                         navigate('/join')
@@ -105,6 +126,8 @@ const Room = () => {
         }).catch((err) => {
             navigate('/join')
         })
+
+        navigator.mediaDevices.addEventListener('devicechange', onDeviceChange)
 
         return () => {
             for (const intervalId of Object.values(handlersRef.current)) { // eslint-disable-line
@@ -116,8 +139,9 @@ const Room = () => {
                     socket.off(eventName, callback)
             }
             document.removeEventListener('mousemove', audioCtxCheck)
+            navigator.mediaDevices.removeEventListener('devicechange', onDeviceChange)
         }
-    }, [roomId, navigate])
+    }, [roomId, navigate, plugAudioInputDevice])
 
     const positionListener = useCallback((pos) => {
         if (audioContext.listener.positionX) {
@@ -183,14 +207,9 @@ const Room = () => {
 
     const selectDevice = useCallback((e) => {
         const selectedDevice = inputDevices.find(d => d.deviceId === e.target.value)
-        navigator.mediaDevices.getUserMedia({audio: {deviceId: selectedDevice.deviceId}}).then(stream => {
-            currentInputStreamSource.current.disconnect(micGainRef.current)
-            currentInputStreamSource.current = audioContext.createMediaStreamSource(stream)
-            currentInputStreamSource.current.connect(micGainRef.current)
-        }).catch(err => {
-            console.error(err)
-        })
-    }, [inputDevices])
+        setSelectedMic(selectedDevice.deviceId)
+        plugAudioInputDevice(selectedDevice.deviceId)
+    }, [inputDevices, plugAudioInputDevice])
 
     useEventListener('keydown', handleKeyPress)
     useEventListener('keyup', handleKeyPress)
@@ -208,7 +227,7 @@ const Room = () => {
                         {mute ? 'mic_off' : 'mic'}
                     </span>
                 </button>
-                <select onChange={selectDevice}>
+                <select value={selectedMic} onChange={selectDevice}>
                     {inputDevices.map(d => 
                         <option key={d.deviceId} value={d.deviceId}>{d.label}</option>    
                     )}
