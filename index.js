@@ -54,6 +54,10 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {    
     socket.on('join-room', (roomId, answer) => {
+        if (!/^[a-z0-9 \-_]+$/.test(roomId)) {
+            answer({status: 'Access denied : forbidden room name'})
+            return
+        }
         const room = getRoom(roomId)
         if (room && room.users.length >= 8) {
             answer({status: 'Access denied : room is full'})
