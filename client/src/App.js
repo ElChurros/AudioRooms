@@ -44,8 +44,7 @@ function App() {
         <Route path='*' index element={<Navigate to='/' replace />} />
       </Routes>
       <footer className={styles.footer}>
-        Made for fun with <a href='https://react.dev'>React</a>, <a href='https://expressjs.com'>ExpressJS</a> & <a href='https://socket.io'>Socket.io</a>
-        {/*  by <a href='https://arthurlemaire.fr'>Arthur LEMAIRE</a> */}
+        Made for fun with <a href='https://react.dev'>React</a>, <a href='https://expressjs.com'>ExpressJS</a> & <a href='https://socket.io'>Socket.io</a> by <a href='https://arthurlemaire.fr'>Arthur LEMAIRE</a>
       </footer>
     </div>
   </>
